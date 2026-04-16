@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudBank - Secure Storage</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    
+    <!-- LOGIN VIEW -->
+    <div class="auth-container" id="loginContainer">
+        <div class="auth-card">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <h1>Welcome Back</h1>
+            </div>
+            <p class="subtitle" style="margin-bottom: 2rem;">Log in to access your files.</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary auth-btn" id="loginSubmitBtn">Secure Log In</button>
+            </form>
+            
+            <p class="auth-switch">
+                Don't have an account? <span style="display:block; margin-top: 10px;"><button class="btn-outline" onclick="switchToRegister()">Create a New Account</button></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- REGISTER VIEW -->
+    <div class="auth-container" id="registerContainer" style="display: none;">
+        <div class="auth-card" style="border-color: var(--success);">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                <h1 style="color: var(--success);">Sign Up</h1>
+            </div>
+            <p class="subtitle" style="margin-bottom: 2rem;">Create your secure storage vault today.</p>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="new@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary auth-btn" id="regSubmitBtn" style="background: var(--success);">Create Account Now</button>
+            </form>
+            
+            <p class="auth-switch">
+                Already have an account? <span style="display:block; margin-top: 10px;"><button class="btn-outline" onclick="switchToLogin()">Go back to Log In</button></span>
+            </p>
+        </div>
+    </div>
+
+
+    <!-- DASHBOARD VIEW -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <header class="app-header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <h1>CloudBank Dashboard</h1>
+            </div>
+            <p class="subtitle">Securely store and access your files anywhere.</p>
+            <div class="user-controls">
+                <p id="userDisplayTag" class="user-tag"></p>
+                <button class="btn-outline" id="logoutBtn">Log Out</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content">
+                        <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <p class="drop-text">Drag & Drop files here</p>
+                        <span class="or-divider">or</span>
+                        <input type="file" id="fileInput" class="file-input" hidden>
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                    </div>
+                </div>
+                
+                <div class="upload-progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-info">
+                        <span id="uploadFileName">filename.jpg</span>
+                        <span id="uploadPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBar"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="files-section">
+                <div class="section-header">
+                    <h2>Your Secure Files</h2>
+                    <button class="btn-icon" id="refreshBtn" onclick="fetchFiles()" title="Refresh Files">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 22v-6h6"/></svg>
+                    </button>
+                </div>
+                
+                <div id="loader" class="loader" style="display: none;"></div>
+                
+                <div class="files-grid" id="fileList">
+                    <!-- Files will be injected here by JS -->
+                </div>
+                
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                    <p>No files uploaded yet.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Message here</div>
+
+    <!-- Reverting to standard filename to fix file:// parameter breakage -->
+    <script src="app.js"></script>
+</body>
+</html>
