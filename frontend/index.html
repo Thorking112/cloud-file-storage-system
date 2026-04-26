@@ -112,6 +112,15 @@
                     </button>
                 </div>
                 
+                <div class="filter-container">
+                    <button class="filter-btn active" onclick="filterFiles('All')">All</button>
+                    <button class="filter-btn" onclick="filterFiles('Images')">Images</button>
+                    <button class="filter-btn" onclick="filterFiles('Documents')">Documents</button>
+                    <button class="filter-btn" onclick="filterFiles('Finance')">Finance</button>
+                    <button class="filter-btn" onclick="filterFiles('Career')">Career</button>
+                    <button class="filter-btn" onclick="filterFiles('Others')">Others</button>
+                </div>
+                
                 <div id="loader" class="loader" style="display: none;"></div>
                 
                 <div class="files-grid" id="fileList">

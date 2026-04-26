@@ -1,6 +1,7 @@
 const API_BASE = 'http://localhost:3000/api';
 let dbClient = null;
 let currentSession = null;
+let allFiles = []; // Global store for loaded files
 
 // DOM Elements
 const loginContainer = document.getElementById('loginContainer');
@@ -232,35 +233,73 @@ async function fetchFiles() {
 
         if (!response.ok) throw new Error(files.error || 'Failed to fetch personal files');
 
-        if (files.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
+        allFiles = files; // Store globally
+        
+        // Reset filter visually to "All"
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        const allBtn = Array.from(document.querySelectorAll('.filter-btn')).find(b => b.textContent === 'All');
+        if(allBtn) allBtn.classList.add('active');
 
-        files.forEach(file => {
-            const card = document.createElement('a');
-            card.href = file.url;
-            card.target = '_blank';
-            card.className = 'file-card';
-            
-            const date = new Date(file.createdAt).toLocaleDateString();
-
-            let svgIcon = `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`;
-            if(file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                svgIcon = `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
-            }
-
-            card.innerHTML = `
-                ${svgIcon}
-                <div class="file-name" title="${file.name}">${file.name}</div>
-                <div class="file-date">${date}</div>
-            `;
-            fileList.appendChild(card);
-        });
+        renderFiles(allFiles);
 
     } catch (error) {
         loader.style.display = 'none';
         showToast(error.message, 'error');
+    }
+}
+
+function renderFiles(files) {
+    fileList.innerHTML = '';
+    
+    if (files.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+    } else {
+        emptyState.style.display = 'none';
+    }
+
+    files.forEach(file => {
+        const card = document.createElement('a');
+        card.href = file.url;
+        card.target = '_blank';
+        card.className = 'file-card';
+        
+        const date = new Date(file.createdAt).toLocaleDateString();
+
+        let svgIcon = `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`;
+        if(file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            svgIcon = `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+        }
+
+        const categoryHTML = file.category ? `<span class="category-badge">${file.category}</span>` : '';
+        const tagsHTML = (file.tags && file.tags.length > 0) ? `<div class="tags-container">${file.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>` : '';
+
+        card.innerHTML = `
+            ${categoryHTML}
+            ${svgIcon}
+            <div class="file-name" title="${file.name}">${file.name}</div>
+            <div class="file-date">${date}</div>
+            ${tagsHTML}
+        `;
+        fileList.appendChild(card);
+    });
+}
+
+window.filterFiles = function(category) {
+    // Update active button state
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if(btn.textContent === category) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    if (category === 'All') {
+        renderFiles(allFiles);
+    } else {
+        const filtered = allFiles.filter(file => file.category === category);
+        renderFiles(filtered);
     }
 }
 
